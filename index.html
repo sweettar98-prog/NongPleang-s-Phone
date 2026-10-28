@@ -1,0 +1,1290 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NongPleang's Phone</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --sf: 'Sarabun', 'TH Sarabun Chula', 'TH Sarabun PSK', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body {
+  height: 100%; overflow: hidden;
+  background: radial-gradient(circle at 50% 30%, #2a2d3a, #0b0c10);
+  font-family: var(--sf);
+  user-select: none;
+}
+button { font: inherit; border: 0; background: none; color: inherit; cursor: pointer; }
+input { font: inherit; outline: 0; border: 0; background: none; color: inherit; }
+
+.ph-tabs {
+  display: flex; border-bottom: 1px solid #e5e5e5; flex: none; background: #f8f8f8;
+}
+.ph-tabs div {
+  flex: 1; text-align: center; padding: 10px 0; font-size: 15px;
+  color: #8e8e93; cursor: pointer; font-weight: 500;
+}
+.ph-tabs div.on { color: #007aff; border-bottom: 2px solid #007aff; }
+
+.nrow {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 16px; border-bottom: 1px solid #f0f0f0; cursor: pointer;
+}
+.nrow:active { background: #f2f2f2; }
+.nrow .rav {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: #e5e5ea; display: flex; align-items: center; justify-content: center;
+  font-size: 20px; flex: none; overflow: hidden;
+}
+.nrow .rn { font-size: 18px; font-weight: 600; color: #000; }
+.nrow .rn.missed { color: #ff3b30; }
+.nrow .rs { font-size: 15px; color: #8e8e93; margin-top: 2px; }
+.nrow .rt { font-size: 14px; color: #8e8e93; margin-left: auto; flex: none; }
+.nrow .ri { color: #007aff; font-size: 20px; margin-left: 8px; font-weight: bold; }
+
+#callScreen {
+  position: absolute; inset: 0; z-index: 45;
+  display: none; flex-direction: column; align-items: center;
+  background: #1c1c1e; color: #fff; overflow: hidden;
+}
+#callScreen.on { display: flex; }
+
+.ft-video-bg {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; z-index: 1;
+}
+.ft-overlay {
+  position: absolute; inset: 0; z-index: 2;
+  background: linear-gradient(180deg, rgba(0,0,0,0.4) 0%, transparent 30%, transparent 70%, rgba(0,0,0,0.6) 100%);
+  display: flex; flex-direction: column; justify-content: space-between;
+  padding: 60px 24px 50px;
+}
+.ft-header { text-align: center; }
+.ft-name { font-size: 26px; font-weight: 600; margin-top: 6px; }
+.ft-status { font-size: 16px; opacity: 0.8; margin-top: 4px; }
+.ft-controls {
+  display: flex; justify-content: center; gap: 24px; align-items: center;
+}
+.ft-btn {
+  width: 60px; height: 60px; border-radius: 50%;
+  background: rgba(255,255,255,0.2); backdrop-filter: blur(15px);
+  display: flex; align-items: center; justify-content: center; font-size: 22px; color: #fff;
+}
+.ft-btn.end { background: #ff3b30; }
+
+#phone {
+  position: absolute; left: 50%; top: 50%;
+  width: min(390px, 92vw);
+  height: min(844px, 92vh);
+  aspect-ratio: 390 / 844;
+  padding: 12px; border-radius: 54px;
+  background: linear-gradient(145deg, #3d3e44, #17171a);
+  box-shadow: inset 0 0 0 2px #5a5b62, 0 40px 90px rgba(0,0,0,.7);
+  transform: translate(-50%, -50%);
+}
+#screen {
+  position: relative; width: 100%; height: 100%;
+  border-radius: 44px; overflow: hidden; background: #000;
+}
+.btn-side {
+  position: absolute; width: 4px; background: #2b2c30; border-radius: 2px;
+}
+#power { right: -3px; top: 180px; height: 80px; cursor: pointer; }
+
+#island {
+  position: absolute; top: 11px; left: 50%; transform: translateX(-50%);
+  width: 110px; height: 32px; background: #000; border-radius: 18px; z-index: 60;
+}
+#status {
+  position: absolute; top: 0; left: 0; right: 0; height: 50px; z-index: 50;
+  display: flex; justify-content: space-between; align-items: flex-start;
+  padding: 16px 28px 0 36px; font-weight: 600; font-size: 15px; color: #fff;
+  pointer-events: none;
+}
+#status .icons { display: flex; gap: 5px; align-items: center; margin-top: 2px; }
+
+/* LINE Notification Popup Banner */
+#notificationBanner {
+  position: absolute; top: 12px; left: 12px; right: 12px;
+  background: rgba(30, 30, 30, 0.88); backdrop-filter: blur(20px);
+  border-radius: 24px; padding: 12px 16px; color: #fff;
+  z-index: 100; display: flex; align-items: center; gap: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1);
+  transform: translateY(-120%); transition: transform 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  cursor: pointer;
+}
+#notificationBanner.show { transform: translateY(0); }
+.notif-ico { width: 38px; height: 38px; border-radius: 10px; background: #06C755; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 11px; color: #fff; flex: none; }
+.notif-cnt { flex: 1; min-width: 0; }
+.notif-header { display: flex; justify-content: space-between; font-size: 13px; color: #aaa; margin-bottom: 2px; }
+.notif-title { font-size: 16px; font-weight: 600; color: #fff; }
+.notif-text { font-size: 14px; color: #ddd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+#hb {
+  position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 200px; height: 24px; z-index: 70; cursor: pointer;
+  display: flex; align-items: flex-end; justify-content: center; padding-bottom: 8px;
+}
+#hb i { width: 120px; height: 5px; border-radius: 3px; background: #fff; }
+
+#lock {
+  position: absolute; inset: 0; z-index: 40;
+  background: linear-gradient(rgba(0,0,0,.35), rgba(0,0,0,.25)),
+    url('https://i.pinimg.com/1200x/99/5a/e5/995ae5d2a61ce94fdd56fe74f196f06e.jpg') center / cover no-repeat;
+  transition: transform .45s cubic-bezier(.3,.8,.3,1);
+}
+#lock.hide { transform: translateY(-105%); }
+#lclock { position: absolute; inset: 0; color: #fff; text-align: center; cursor: pointer; }
+#ldate { margin-top: 90px; font-size: 22px; font-weight: 600; opacity: .9; }
+#ltime { font-size: 88px; font-weight: 600; line-height: 1; letter-spacing: -2px; }
+.lbtns {
+  position: absolute; bottom: 70px; left: 40px; right: 40px;
+  display: flex; justify-content: space-between;
+}
+.lbtns b {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: rgba(40,40,50,.45); backdrop-filter: blur(12px);
+  display: flex; align-items: center; justify-content: center; font-size: 20px;
+}
+.lhint {
+  position: absolute; bottom: 36px; width: 100%;
+  font-size: 15px; opacity: .75; animation: blink 2.4s infinite;
+}
+@keyframes blink { 50% { opacity: .35; } }
+
+#pad {
+  position: absolute; inset: 0; display: none; color: #fff;
+  background: rgba(10,10,25,.4); backdrop-filter: blur(24px);
+}
+#pad.on { display: block; }
+#padInner {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center;
+}
+#padTitle { margin-top: 90px; font-size: 20px; font-weight: 500; }
+#dots { display: flex; gap: 18px; margin-top: 24px; }
+#dots i {
+  width: 12px; height: 12px; border-radius: 50%;
+  border: 1.5px solid #fff; transition: background .12s;
+}
+#dots i.f { background: #fff; }
+#keys {
+  display: grid; grid-template-columns: repeat(3, 72px);
+  gap: 14px 20px; margin-top: 40px;
+}
+.k {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: rgba(255,255,255,.17);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  font-size: 30px; transition: background .1s;
+}
+.k:active { background: rgba(255,255,255,.5); }
+.k small { font-size: 10px; letter-spacing: 1.5px; margin-top: 2px; font-weight: 600; }
+.k.t { background: none; font-size: 17px; }
+.shake { animation: shake .45s; }
+@keyframes shake {
+  20%, 80% { transform: translateX(8px); }
+  40%, 60% { transform: translateX(-12px); }
+}
+
+#home { position: absolute; inset: 0; z-index: 1; }
+.wall {
+  position: absolute; inset: 0;
+  background: url('https://i.pinimg.com/1200x/99/5a/e5/995ae5d2a61ce94fdd56fe74f196f06e.jpg') center / cover no-repeat;
+}
+.hwrap { position: absolute; inset: 0; padding: 64px 18px 0; }
+#widget {
+  height: 140px; border-radius: 22px; padding: 14px 16px; color: #fff;
+  display: flex; flex-direction: column; justify-content: space-between;
+  background: linear-gradient(135deg, #1e1b4b, #312e81);
+  box-shadow: 0 8px 24px rgba(0,0,0,.25);
+}
+#widget .w-title { font-size: 14px; opacity: .8; }
+#widget .w-song { font-size: 19px; font-weight: 700; }
+#widget .w-artist { font-size: 15px; opacity: .85; }
+.app {
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  color: #fff; font-size: 13px; cursor: pointer;
+  text-shadow: 0 1px 3px rgba(0,0,0,.35);
+}
+.ico {
+  width: 58px; height: 58px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0; transition: transform .12s; overflow: hidden;
+  position: relative; box-shadow: 0 1px 2px rgba(0,0,0,.15);
+}
+.app:active .ico { transform: scale(.9); }
+.grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px 0; margin-top: 22px;
+}
+.dock {
+  position: absolute; left: 12px; right: 12px; bottom: 22px; height: 88px;
+  border-radius: 32px; background: rgba(255,255,255,.2); backdrop-filter: blur(20px);
+  display: flex; justify-content: space-around; align-items: center;
+}
+.dock .app span { display: none; }
+
+.ico-photos { background: linear-gradient(180deg, #fff 40%, #f2f2f7 100%); }
+.ico-photos::before {
+  content: ''; position: absolute; width: 28px; height: 28px; border-radius: 50%;
+  background: conic-gradient(from 0deg, #ff3b30, #ff9500, #ffcc00, #34c759, #5ac8fa, #007aff, #af52de, #ff2d55, #ff3b30);
+  mask: radial-gradient(circle, transparent 30%, #000 32%);
+  -webkit-mask: radial-gradient(circle, transparent 30%, #000 32%);
+}
+.ico-photos::after {
+  content: ''; position: absolute; width: 10px; height: 10px; border-radius: 50%;
+  background: #ffcc00; top: 50%; left: 50%; transform: translate(-50%, -50%);
+}
+
+.ico-notes { background: linear-gradient(180deg, #fffef5 0%, #ffecc7 100%); }
+.ico-notes::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 12px; background: #ffd60a; }
+.ico-notes::after {
+  content: ''; position: absolute; top: 20px; left: 10px; right: 10px; height: 28px;
+  background: repeating-linear-gradient(transparent 0 6px, #d4a574 6px 7px); opacity: .45;
+}
+
+.ico-music { background: linear-gradient(160deg, #ff2d55 0%, #ff375f 50%, #c41e3a 100%); }
+.ico-music::before { content: '♪'; font-size: 30px; color: #fff; font-weight: 700; line-height: 1; margin-top: 2px; }
+
+.ico-calc { background: #1c1c1e; }
+.ico-calc::before {
+  content: ''; position: absolute; width: 36px; height: 36px;
+  background: radial-gradient(circle at 8px 8px, #ff9f0a 0 5px, transparent 5.5px),
+              radial-gradient(circle at 28px 8px, #a5a5a5 0 5px, transparent 5.5px),
+              radial-gradient(circle at 8px 28px, #333 0 5px, transparent 5.5px),
+              radial-gradient(circle at 28px 28px, #333 0 5px, transparent 5.5px);
+}
+
+.ico-phone { background: linear-gradient(160deg, #30d158 0%, #34c759 100%); }
+.ico-phone::before {
+  content: ''; position: absolute; width: 22px; height: 22px; border: 3px solid #fff;
+  border-radius: 6px 6px 4px 10px; transform: rotate(-25deg);
+}
+
+.ico-safari { background: linear-gradient(180deg, #5ac8fa 0%, #007aff 100%); }
+.ico-safari::before {
+  content: ''; position: absolute; width: 36px; height: 36px; border-radius: 50%;
+  background: conic-gradient(from 0deg, #ff3b30, #ff9500, #ffcc00, #34c759, #5ac8fa, #007aff, #af52de, #ff2d55, #ff3b30);
+  mask: radial-gradient(circle, transparent 38%, #000 40%);
+  -webkit-mask: radial-gradient(circle, transparent 38%, #000 40%);
+}
+
+.ico-line { background: #06C755; }
+.ico-line::before { content: 'LINE'; font-size: 13px; font-weight: 800; color: #fff; }
+
+.ico-ig { background: linear-gradient(45deg, #feda75 0%, #fa7e1e 25%, #d62976 50%, #962fbf 75%, #4f5bd5 100%); }
+.ico-ig::before { content: ''; position: absolute; width: 28px; height: 28px; border: 2.5px solid #fff; border-radius: 8px; }
+.ico-ig::after {
+  content: ''; position: absolute; width: 12px; height: 12px; border: 2.5px solid #fff; border-radius: 50%;
+  top: 50%; left: 50%; transform: translate(-50%, -50%); box-shadow: 10px -10px 0 -4px #fff;
+}
+
+#app {
+  position: absolute; inset: 0; z-index: 20;
+  opacity: 0; pointer-events: none;
+  transform: scale(.9);
+  transition: opacity .22s, transform .25s cubic-bezier(.3,.8,.3,1);
+  background: #fff; color: #000;
+  display: flex; flex-direction: column; padding-top: 50px;
+}
+#app.open { opacity: 1; pointer-events: auto; transform: none; }
+.ap-head {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 16px; font-size: 18px; font-weight: 600; flex: none;
+}
+.ap-head .back { color: #007aff; font-size: 24px; cursor: pointer; }
+.scroll { flex: 1; overflow-y: auto; min-height: 0; }
+.scroll::-webkit-scrollbar { width: 0; }
+
+/* LINE CSS */
+.line-head { display: flex; justify-content: space-between; align-items: center; padding: 10px 16px 8px; flex: none; border-bottom: 1px solid #eee; }
+.line-head h1 { font-size: 22px; font-weight: 700; }
+.line-tabs { display: flex; border-bottom: 1px solid #eee; flex: none; }
+.line-tabs div { flex: 1; text-align: center; padding: 10px 0; font-size: 15px; color: #999; cursor: pointer; font-weight: 500; }
+.line-tabs div.on { color: #06C755; border-bottom: 2px solid #06C755; }
+.lrow { display: flex; gap: 12px; align-items: center; padding: 12px 16px; cursor: pointer; }
+.lrow:active { background: #f5f5f5; }
+.lav { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; flex: none; background: #e8e8e8; overflow: hidden; }
+.lmid { flex: 1; min-width: 0; }
+.ln { font-size: 17px; font-weight: 600; }
+.lp { font-size: 14px; color: #888; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lr { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; font-size: 12px; color: #aaa; flex: none; }
+.lbadge { background: #ff3b30; color: #fff; border-radius: 10px; min-width: 18px; height: 18px; font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; padding: 0 5px; }
+.lroom { background: #7494a9; display: flex; flex-direction: column; height: 100%; }
+.lroom-head { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #fff; flex: none; border-bottom: 1px solid #e0e0e0; }
+.lroom-head .back { color: #06C755; font-size: 26px; cursor: pointer; }
+.lroom-head .name { font-size: 18px; font-weight: 600; flex: 1; }
+.lchat { flex: 1; overflow-y: auto; padding: 12px 10px; min-height: 0; }
+.lchat::-webkit-scrollbar { width: 0; }
+.ldate {
+  display: block;
+  width: fit-content;
+  margin: 12px auto;
+  text-align: center;
+  font-size: 13px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 4px 14px;
+  border-radius: 12px;
+}
+.lmsg { display: flex; gap: 8px; margin-bottom: 10px; align-items: flex-end; }
+.lmsg.me { flex-direction: row-reverse; }
+.lmsg .av { width: 36px; height: 36px; border-radius: 50%; background: #ddd; display: flex; align-items: center; justify-content: center; font-size: 18px; flex: none; overflow: hidden; }
+.lbubble { max-width: 230px; padding: 8px 14px; font-size: 16px; line-height: 1.35; word-break: break-word; background: #fff; border-radius: 4px 16px 16px 16px; font-weight: 400; }
+.lmsg.me .lbubble { background: #06C755; color: #fff; border-radius: 16px 4px 16px 16px; }
+.ltime { font-size: 11px; color: rgba(255,255,255,.9); margin: 0 4px; flex: none; }
+.lmsg:not(.me) .ltime { color: rgba(0,0,0,.45); }
+.lin { display: flex; gap: 8px; align-items: center; padding: 8px 10px 28px; background: #fff; flex: none; }
+.lin input { flex: 1; background: #f0f0f0; border-radius: 20px; padding: 8px 14px; font-size: 15px; }
+.lin button { background: #06C755; color: #fff; border-radius: 50%; width: 36px; height: 36px; font-size: 16px; display: flex; align-items: center; justify-content: center; }
+
+.lread {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 2px;
+}
+.lmeta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-end;
+}
+
+.dial-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; padding-top: 20px; }
+#pnum { font-size: 32px; height: 48px; margin-bottom: 16px; letter-spacing: 2px; }
+.dial { display: grid; grid-template-columns: repeat(3, 72px); gap: 12px 22px; }
+.dk {
+  width: 72px; height: 72px; border-radius: 50%; background: #e8e8ea;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 28px;
+}
+.dk:active { background: #bbb; }
+.dk small { font-size: 10px; font-weight: 700; letter-spacing: 1px; }
+.dk.call { background: #34c759; color: #fff; }
+
+/* Calculator UI */
+.calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; padding: 20px; background: #000; height: 100%; }
+.calc-btn { background: #333; color: #fff; border-radius: 50%; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 500; }
+.calc-btn.op { background: #ff9f0a; }
+.calc-btn.top { background: #a5a5a5; color: #000; }
+.calc-display { grid-column: span 4; font-size: 56px; color: #fff; text-align: right; padding: 20px 10px 0; display: flex; align-items: flex-end; justify-content: flex-end; }
+
+/* IG Story View */
+#igStoryViewer {
+  position: absolute; inset: 0; z-index: 100; background: #000; display: none; flex-direction: column;
+}
+#igStoryViewer.open { display: flex; }
+.story-bar { display: flex; gap: 4px; padding: 10px 10px 0; }
+.story-progress { flex: 1; height: 2px; background: rgba(255,255,255,0.4); border-radius: 2px; overflow: hidden; }
+.story-fill { height: 100%; width: 0%; background: #fff; }
+.story-head { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; color: #fff; }
+.story-user { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; }
+</style>
+</head>
+<body>
+<div id="phone">
+  <i class="btn-side" style="left:-3px;top:140px;height:30px"></i>
+  <i class="btn-side" style="left:-3px;top:190px;height:55px"></i>
+  <i class="btn-side" style="left:-3px;top:260px;height:55px"></i>
+  <i class="btn-side" id="power" title="ล็อก" onclick="lockPhone()"></i>
+
+  <div id="screen">
+    <div id="island"></div>
+    <div id="status">
+      <span id="stime">4:30</span>
+      <span class="icons">■■■ 📶 🔋</span>
+    </div>
+
+    <!-- LINE Pop-up Notification Banner -->
+    <div id="notificationBanner" onclick="openStoryChat()">
+      <div class="notif-ico">LINE</div>
+      <div class="notif-cnt">
+        <div class="notif-header"><span>LINE</span><span>เมื่อครู่นี้</span></div>
+        <div class="notif-title" id="notifTitle">baby</div>
+        <div class="notif-text" id="notifText">ทำอะไรอยู่คะ</div>
+      </div>
+    </div>
+
+    <div id="lock">
+      <div id="lclock" onclick="showPad()">
+        <div id="ldate">24 ตุลาคม เสาร์</div>
+        <div id="ltime">16:30</div>
+        <div class="lbtns"><b>🔦</b><b>📷</b></div>
+        <div class="lhint">Swipe up</div>
+      </div>
+      <div id="pad">
+        <div id="padInner">
+          <div id="padTitle">ป้อนรหัสผ่าน</div>
+          <div id="dots"><i></i><i></i><i></i><i></i></div>
+          <div id="keys">
+            <button class="k" data-n="1">1</button>
+            <button class="k" data-n="2">2<small>ABC</small></button>
+            <button class="k" data-n="3">3<small>DEF</small></button>
+            <button class="k" data-n="4">4<small>GHI</small></button>
+            <button class="k" data-n="5">5<small>JKL</small></button>
+            <button class="k" data-n="6">6<small>MNO</small></button>
+            <button class="k" data-n="7">7<small>PQRS</small></button>
+            <button class="k" data-n="8">8<small>TUV</small></button>
+            <button class="k" data-n="9">9<small>WXYZ</small></button>
+            <button class="k t"></button>
+            <button class="k" data-n="0">0</button>
+            <button class="k t" id="btnCancel">ยกเลิก</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="home">
+      <div class="wall"></div>
+      <div class="hwrap">
+        <div id="widget">
+          <div class="w-title">♪ กำลังเล่น</div>
+          <div>
+            <div class="w-song">Lemonade</div>
+            <div class="w-artist">aespa</div>
+          </div>
+        </div>
+        <div class="grid">
+          <div class="app" onclick="openApp('photos')"><div class="ico ico-photos"></div><span>Photos</span></div>
+          <div class="app" onclick="openApp('notes')"><div class="ico ico-notes"></div><span>Notes</span></div>
+          <div class="app" onclick="openApp('music')"><div class="ico ico-music"></div><span>Music</span></div>
+          <div class="app" onclick="openApp('calc')"><div class="ico ico-calc"></div><span>Calculator</span></div>
+        </div>
+        <div class="dock">
+          <div class="app" onclick="openApp('phone')"><div class="ico ico-phone"></div><span>Phone</span></div>
+          <div class="app" onclick="openApp('safari')"><div class="ico ico-safari"></div><span>Safari</span></div>
+          <div class="app" onclick="openApp('line')"><div class="ico ico-line"></div><span>LINE</span></div>
+          <div class="app" onclick="openApp('ig')"><div class="ico ico-ig"></div><span>Instagram</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="app"></div>
+
+    <!-- IG Story Viewer Modal -->
+    <div id="igStoryViewer">
+      <div class="story-bar">
+        <div class="story-progress"><div class="story-fill" id="storyFill"></div></div>
+      </div>
+      <div class="story-head">
+        <div class="story-user">
+          <div style="width:32px;height:32px;border-radius:50%;overflow:hidden;">
+            <img src="https://i.pinimg.com/736x/d0/b6/0c/d0b60c9c7bd7b4f0445f7944ed61909b.jpg" style="width:100%;height:100%;object-fit:cover;">
+          </div>
+          <span>baby</span>
+          <span style="opacity:0.6;font-weight:400;font-size:12px;">3ชม.</span>
+        </div>
+        <button onclick="closeIgStory()" style="font-size:20px;color:#fff;">✕</button>
+      </div>
+      <div style="flex:1;background:url('https://i.pinimg.com/1200x/99/5a/e5/995ae5d2a61ce94fdd56fe74f196f06e.jpg') center/cover;margin:10px 0;border-radius:12px;position:relative;display:flex;align-items:flex-end;padding:20px;">
+        <div style="color:#fff;font-size:18px;font-weight:600;text-shadow:0 2px 4px rgba(0,0,0,0.5);">
+          วันนี้อากาศดีจังเลย ☀️🍃
+        </div>
+      </div>
+    </div>
+
+    <!-- FaceTime Call Screen -->
+    <div id="callScreen">
+      <div id="callingView" style="position:absolute; inset:0; background:#000; z-index:3; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+        <div id="callAvatar" style="width:100px; height:100px; border-radius:50%; overflow:hidden; background:#333; margin-bottom:20px;"></div>
+        <div id="callName" style="font-size:26px; font-weight:600; color:#fff; margin-bottom:8px;">baby</div>
+        <div id="callStatus" style="font-size:16px; color:#aaa;">กำลังโทร...</div>
+      </div>
+
+      <video id="ftVideo" class="ft-video-bg" loop playsinline style="display:none; z-index:1;">
+        <source src="facetime.mp4" type="video/mp4">
+      </video>
+      
+      <div class="ft-overlay" style="z-index:4;">
+        <div class="ft-header" style="opacity:0;" id="ftHeader">
+          <div class="ft-status" id="activeStatus">FaceTime</div>
+          <div class="ft-name" id="activeName">baby</div>
+        </div>
+        <div class="ft-controls" id="activeControls" style="display:none;">
+          <button class="ft-btn">📷</button>
+          <button class="ft-btn">🔇</button>
+          <button class="ft-btn end" onclick="endCall()">📞</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="hb" onclick="goHome()"><i></i></div>
+  </div>
+</div>
+
+<script>
+const PASS = '1234';
+let pin = '';
+let unlocked = false;
+let notificationTimer = null;
+let notificationTriggered = false;
+let storyTriggered = false;
+
+// ==========================================
+// 🎬 กำหนดลำดับเนื้อเรื่อง (Story Script)
+// ==========================================
+const storyInitialMsg = "ทำอะไรอยู่คะ";
+
+const storyScript = [
+  { me: true,  text: "คิดถึงพี่ต้าอยู่น่ะสิ", delay: 2500, readDelay: 1000 },
+  { me: false, text: "ขี้โม้รึเปล่า", delay: 2000 },
+  { me: false, text: "วันนี้เรียนสนุกไหมคะ", delay: 2000 },
+  { me: true,  text: "ม่ายเจอพี่ต้า จะสนุกได้ยังไงล่ะคะ", delay: 2200, readDelay: 1000 },
+  { me: false, text: "แปลว่าไม่ตั้งใจเรียนรึเปล่า", delay: 1800 },
+  { me: true,  text: "ตั้งใจเรียนสิคะ" , delay: 2200, readDelay: 1000},
+  { me: true,  text: "ไม่งั้นหนูคงโดนพี่ต้าดุแน่" , delay: 2200, readDelay: 1000},
+  { me: false, text: "พี่จะไปกล้าดุหนูได้ยังไงคะ" , delay: 2000 },
+  { me: false, text: "น้องเต้ออยากเจอนะคะ บ่นคิดถึงพี่เพลงใหญ่เลย" , delay: 2000 },
+  { me: true,  text: "แงงงงงง หนูอยากเจอน้องเต้อเหมือนกาน" , delay: 2200 , readDelay: 1000},
+  { me: true,  text: "วันฮาโลวีนพาน้องเต้อไปซื้อเสื้อผ้ามาแต่งตัวดีไหมคะ" , delay: 2200, readDelay: 1000},
+  { me: false, text: "อื้อ เอาสิ" , delay: 2000 },
+  { me: false, text: "งั้นวันพรุ่งนี้ดีไหมคะ" , delay: 2000 },
+  { me: true,  text: "ดีจิ งั้นพรุ่งนี้นะคะ" , delay: 2200, readDelay: 1000},
+  { me: true,  text: "หนูต้องไปนอนแย้ว" , delay: 2200, readDelay: 1000},
+  { me: true,  text: "ฝันดีนะคะ" , delay: 2200, readDelay: 1000},
+  { me: false, text: "ฝันดีค่ะดื้อ" , delay: 2000 }
+];
+
+function updateClock() {
+  const now = new Date();
+  const h = now.getHours();
+  const m = String(now.getMinutes()).padStart(2, '0');
+  const t = `${h}:${m}`;
+  document.getElementById('ltime').textContent = t.length === 4 ? `0${t}` : t;
+  document.getElementById('stime').textContent = t;
+  const days = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัส','ศุกร์','เสาร์'];
+  const months = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน',
+    'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  document.getElementById('ldate').textContent =
+    `${now.getDate()} ${months[now.getMonth()]} ${days[now.getDay()]}`;
+}
+updateClock();
+setInterval(updateClock, 10000);
+
+function showPad() {
+  document.getElementById('pad').classList.add('on');
+  pin = '';
+  updateDots();
+}
+document.getElementById('btnCancel').onclick = () => {
+  document.getElementById('pad').classList.remove('on');
+  pin = '';
+  updateDots();
+};
+
+document.querySelectorAll('.k[data-n]').forEach(btn => {
+  btn.onclick = () => {
+    if (pin.length >= 4) return;
+    pin += btn.dataset.n;
+    updateDots();
+    if (pin.length === 4) {
+      setTimeout(() => {
+        if (pin === PASS) {
+          unlocked = true;
+          document.getElementById('lock').classList.add('hide');
+          document.getElementById('pad').classList.remove('on');
+          
+          scheduleNotification();
+        } else {
+          const inner = document.getElementById('padInner');
+          inner.classList.add('shake');
+          setTimeout(() => inner.classList.remove('shake'), 450);
+          pin = '';
+          updateDots();
+        }
+      }, 150);
+    }
+  };
+});
+
+function scheduleNotification() {
+  if (notificationTriggered) return;
+  
+  clearTimeout(notificationTimer);
+  notificationTimer = setTimeout(() => {
+    triggerLineNotification();
+  }, 3000);
+}
+
+function triggerLineNotification() {
+  notificationTriggered = true;
+  const notif = document.getElementById('notificationBanner');
+  document.getElementById('notifText').textContent = storyInitialMsg;
+  notif.classList.add('show');
+  
+  lineChats.friend1.unread = 1;
+
+  const now = new Date();
+  const months = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  const todayDateStr = `${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear() + 543}`;
+  const time = `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
+  
+  const chatMsgs = lineChats.friend1.messages;
+  
+  const hasDate = chatMsgs.some(m => m.dateDivider && m.text === todayDateStr);
+  if (!hasDate) {
+    chatMsgs.push({ dateDivider: true, text: todayDateStr });
+  }
+
+  const hasInitial = chatMsgs.some(m => m.text === storyInitialMsg);
+  if (!hasInitial) {
+    chatMsgs.push({ me: false, text: storyInitialMsg, time: time });
+  }
+
+  setTimeout(() => {
+    notif.classList.remove('show');
+  }, 6000);
+}
+
+function openStoryChat() {
+  document.getElementById('notificationBanner').classList.remove('show');
+  openApp('line');
+  openLineChat('friend1');
+}
+
+function runStoryScript(index) {
+  if (index >= storyScript.length) return;
+  
+  const step = storyScript[index];
+  
+  setTimeout(() => {
+    const now = new Date();
+    const time = `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
+    
+    if (step.me) {
+      const msgObj = { me: true, text: step.text, time: time, isRead: false };
+      lineChats.friend1.messages.push(msgObj);
+      openLineChat('friend1');
+      
+      setTimeout(() => {
+        msgObj.isRead = true;
+        openLineChat('friend1');
+        runStoryScript(index + 1);
+      }, step.readDelay || 1200);
+      
+    } else {
+      lineChats.friend1.messages.push({ me: false, text: step.text, time: time });
+      openLineChat('friend1');
+      runStoryScript(index + 1);
+    }
+  }, step.delay);
+}
+
+function updateDots() {
+  document.querySelectorAll('#dots i').forEach((d, i) => {
+    d.classList.toggle('f', i < pin.length);
+  });
+}
+
+function lockPhone() {
+  unlocked = false;
+  notificationTriggered = false;
+  storyTriggered = false;
+  clearTimeout(notificationTimer);
+  document.getElementById('notificationBanner').classList.remove('show');
+  document.getElementById('lock').classList.remove('hide');
+  document.getElementById('pad').classList.remove('on');
+  closeApp();
+  pin = '';
+  updateDots();
+}
+
+function goHome() { closeApp(); }
+function closeApp() {
+  const app = document.getElementById('app');
+  app.classList.remove('open');
+  setTimeout(() => { app.innerHTML = ''; }, 250);
+}
+
+const callHistory = [
+  { 
+    name: 'baby', 
+    phone: '06X-XXX-XXXX', 
+    avatar: 'https://i.pinimg.com/736x/d0/b6/0c/d0b60c9c7bd7b4f0445f7944ed61909b.jpg', 
+    type: 'incoming', 
+    time: '16:17', 
+    missed: false,
+    canCall: true 
+  },
+  { 
+    name: 'MOM', 
+    phone: '08X-XXX-XXXX', 
+    avatar: 'https://i.pinimg.com/1200x/45/c3/7e/45c37e86542793f115b3b90b1f458730.jpg', 
+    type: 'incoming', 
+    time: '12:40', 
+    missed: false,
+    canCall: false 
+  },
+  {
+    name: 'คุณหมอคลินิก',
+    phone: '02X-XXX-XXXX',
+    avatar: '',
+    type: 'outgoing',
+    time: 'เมื่อวาน',
+    missed: false,
+    canCall: false
+  },
+  {
+    name: 'ร้านเค้กประจำ',
+    phone: '09X-XXX-XXXX',
+    avatar: '',
+    type: 'incoming',
+    time: '20 ต.ค.',
+    missed: true,
+    canCall: false
+  }
+];
+
+let dialNum = '';
+let callTimer = null;
+let callSeconds = 0;
+
+function getPhoneView(tab) {
+  const recentsOn = tab === 'recents' ? 'on' : '';
+  const keypadOn  = tab === 'keypad'  ? 'on' : '';
+
+  let body = '';
+  if (tab === 'recents') {
+    body = callHistory.map((c) => {
+      const avatarHtml = c.avatar 
+        ? `<img src="${c.avatar}" style="width:100%;height:100%;object-fit:cover;">`
+        : `<span style="font-size:20px;color:#666;">👤</span>`;
+
+      return `
+        <div class="nrow" onclick="handleRowClick('${c.name.replace(/'/g, "\\'")}', ${c.canCall})">
+          <div class="rav">${avatarHtml}</div>
+          <div>
+            <div class="rn ${c.missed ? 'missed' : ''}">${c.name}</div>
+            <div class="rs">${c.phone} • ${c.missed ? 'ไม่ได้รับสาย' : c.type === 'outgoing' ? 'โทรออก' : 'สายโทรเข้า'}</div>
+          </div>
+          <div class="rt">${c.time}</div>
+          <div class="ri" onclick="event.stopPropagation();handleRowClick('${c.name.replace(/'/g, "\\'")}', ${c.canCall})">ⓘ</div>
+        </div>
+      `;
+    }).join('');
+    body = `<div class="scroll">${body}</div>`;
+  } else {
+    body = `
+      <div class="dial-wrap">
+        <div id="pnum">${dialNum}</div>
+        <div class="dial">
+          ${[1,2,3,4,5,6,7,8,9,'*',0,'#'].map(n =>
+            `<button class="dk" onclick="dialKey('${n}')">${n}${
+              n===2?'<small>ABC</small>':n===3?'<small>DEF</small>':
+              n===4?'<small>GHI</small>':n===5?'<small>JKL</small>':
+              n===6?'<small>MNO</small>':n===7?'<small>PQRS</small>':
+              n===8?'<small>TUV</small>':n===9?'<small>WXYZ</small>':''
+            }</button>`
+          ).join('')}
+          <span></span>
+          <button class="dk call" onclick=""></button>
+          <button class="dk" onclick="dialBack()">⌫</button>
+        </div>
+      </div>`;
+  }
+
+  return `
+    <div class="ap-head"><span class="back" onclick="closeApp()">‹</span> Phone</div>
+    <div class="ph-tabs">
+      <div class="${recentsOn}" onclick="switchPhoneTab('recents')">Recents</div>
+      <div class="${keypadOn}"  onclick="switchPhoneTab('keypad')">Keypad</div>
+    </div>
+    ${body}`;
+}
+
+function handleRowClick(name, canCall) {
+  if (canCall) startCall(name);
+}
+
+function switchPhoneTab(tab) {
+  const app = document.getElementById('app');
+  app.innerHTML = getPhoneView(tab);
+  app.classList.add('open');
+}
+
+function dialKey(n) {
+  if (dialNum.length >= 15) return;
+  dialNum += n;
+  const el = document.getElementById('pnum');
+  if (el) el.textContent = dialNum;
+}
+
+function dialBack() {
+  dialNum = dialNum.slice(0, -1);
+  const el = document.getElementById('pnum');
+  if (el) el.textContent = dialNum;
+}
+
+function startCall(name) {
+  const currentContact = callHistory.find(c => c.name === name);
+  const avatarUrl = currentContact ? currentContact.avatar : '';
+  const avatarHtml = avatarUrl 
+    ? `<img src="${avatarUrl}" style="width:100%;height:100%;object-fit:cover;">`
+    : `<span style="font-size:40px;display:flex;align-items:center;justify-content:center;height:100%;">👤</span>`;
+  
+  document.getElementById('callAvatar').innerHTML = avatarHtml;
+  document.getElementById('callName').textContent = name;
+  document.getElementById('activeName').textContent = name;
+  document.getElementById('callStatus').textContent = 'กำลังโทร...';
+
+  document.getElementById('callingView').style.display = 'flex';
+  document.getElementById('ftVideo').style.display = 'none';
+  document.getElementById('ftHeader').style.opacity = '0';
+  document.getElementById('activeControls').style.display = 'none';
+
+  const screen = document.getElementById('callScreen');
+  screen.classList.add('on');
+
+  const video = document.getElementById('ftVideo');
+  video.pause();
+  video.currentTime = 0;
+
+  callSeconds = 0;
+  clearInterval(callTimer);
+
+  setTimeout(() => {
+    if (!screen.classList.contains('on')) return;
+
+    document.getElementById('callingView').style.display = 'none';
+    document.getElementById('ftVideo').style.display = 'block';
+    document.getElementById('ftHeader').style.opacity = '1';
+    document.getElementById('activeControls').style.display = 'flex';
+    document.getElementById('activeStatus').textContent = 'FaceTime • 00:00';
+
+    video.play().catch(() => {});
+
+    callTimer = setInterval(() => {
+      callSeconds++;
+      const m = String(Math.floor(callSeconds / 60)).padStart(2, '0');
+      const s = String(callSeconds % 60).padStart(2, '0');
+      document.getElementById('activeStatus').textContent = `FaceTime • ${m}:${s}`;
+    }, 1000);
+  }, 3000);
+}
+
+function endCall() {
+  clearInterval(callTimer);
+  const video = document.getElementById('ftVideo');
+  video.pause();
+  video.currentTime = 0;
+  document.getElementById('callScreen').classList.remove('on');
+  dialNum = '';
+}
+
+/* ========== OTHER APPS ========== */
+function openApp(name) {
+  const app = document.getElementById('app');
+  if (name === 'phone') {
+    app.innerHTML = getPhoneView('recents');
+    app.classList.add('open');
+  } else if (name === 'line') {
+    app.innerHTML = getLineList();
+    app.classList.add('open');
+  } else if (name === 'safari') {
+    app.innerHTML = getSafariView();
+    app.classList.add('open');
+  } else if (name === 'photos') {
+    app.innerHTML = getPhotosView();
+    app.classList.add('open');
+  } else if (name === 'notes') {
+    app.innerHTML = getNotesView();
+    app.classList.add('open');
+  } else if (name === 'music') {
+    app.innerHTML = getMusicView();
+    app.classList.add('open');
+  } else if (name === 'calc') {
+    app.innerHTML = getCalcView();
+    app.classList.add('open');
+  } else if (name === 'ig') {
+    app.innerHTML = getIgView();
+    app.classList.add('open');
+  }
+}
+
+function getPhotosView() {
+  return `
+    <div class="ap-head"><span class="back" onclick="closeApp()">‹</span> รูปภาพ</div>
+    <div class="scroll" style="padding:10px;">
+      <h3 style="margin-bottom:10px;font-size:18px;">อัลบั้มล่าสุด</h3>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;">
+        <div style="aspect-ratio:1;background:url('https://i.pinimg.com/1200x/99/5a/e5/995ae5d2a61ce94fdd56fe74f196f06e.jpg') center/cover;border-radius:6px;"></div>
+        <div style="aspect-ratio:1;background:url('https://i.pinimg.com/736x/d0/b6/0c/d0b60c9c7bd7b4f0445f7944ed61909b.jpg') center/cover;border-radius:6px;"></div>
+        <div style="aspect-ratio:1;background:url('https://i.pinimg.com/1200x/45/c3/7e/45c37e86542793f115b3b90b1f458730.jpg') center/cover;border-radius:6px;"></div>
+        <div style="aspect-ratio:1;background:#ddd;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:24px;">🌸</div>
+        <div style="aspect-ratio:1;background:#eee;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:24px;">🐱</div>
+        <div style="aspect-ratio:1;background:#e2e2e2;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:24px;">☕</div>
+      </div>
+    </div>`;
+}
+
+function getNotesView() {
+  return `
+    <div class="ap-head"><span class="back" onclick="closeApp()">‹</span> โน้ต</div>
+    <div class="scroll" style="padding:15px;">
+      <h2 style="font-size:24px;font-weight:700;margin-bottom:15px;">โน้ตทั้งหมด</h2>
+      <div style="background:#f2f2f7;border-radius:12px;padding:12px 16px;margin-bottom:10px;">
+        <div style="font-size:16px;font-weight:600;">รายการของที่ต้องซื้อ 🛒</div>
+        <div style="font-size:14px;color:#666;margin-top:4px;">- ชาไข่มุกหวาน 50%<br>- ขนมแมวเลีย<br>- เสื้อผ้าแต่งตัววันฮาโลวีน</div>
+      </div>
+      <div style="background:#f2f2f7;border-radius:12px;padding:12px 16px;">
+        <div style="font-size:16px;font-weight:600;">สถานที่เที่ยวตากอากาศ ✈️</div>
+        <div style="font-size:14px;color:#666;margin-top:4px;">เขาใหญ่, คาเฟ่นครปฐม</div>
+      </div>
+    </div>`;
+}
+
+function getMusicView() {
+  return `
+    <div class="ap-head"><span class="back" onclick="closeApp()">‹</span> เพลง</div>
+    <div class="scroll" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center;">
+      <div style="width:220px;height:220px;border-radius:20px;background:linear-gradient(135deg,#ff9a9e,#fecfef);display:flex;align-items:center;justify-content:center;font-size:80px;box-shadow:0 10px 25px rgba(0,0,0,0.15);margin-bottom:25px;">🍋</div>
+      <h2 style="font-size:22px;font-weight:700;">Lemonade</h2>
+      <p style="font-size:16px;color:#666;margin-top:4px;">aespa</p>
+      <div style="width:100%;background:#e5e5ea;height:4px;border-radius:2px;margin:30px 0 10px;">
+        <div style="width:45%;background:#007aff;height:100%;border-radius:2px;"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;width:100%;font-size:12px;color:#8e8e93;margin-bottom:20px;">
+        <span>1:24</span><span>3:10</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:35px;font-size:32px;cursor:pointer;">
+        <span>⏮</span><span>⏸</span><span>⏭</span>
+      </div>
+    </div>`;
+}
+
+function getCalcView() {
+  return `
+    <div class="ap-head" style="background:#000;color:#fff;"><span class="back" onclick="closeApp()" style="color:#ff9f0a;">‹</span></div>
+    <div class="calc-display">0</div>
+    <div class="calc-grid">
+      <button class="calc-btn top">C</button>
+      <button class="calc-btn top">±</button>
+      <button class="calc-btn top">%</button>
+      <button class="calc-btn op">÷</button>
+      <button class="calc-btn">7</button>
+      <button class="calc-btn">8</button>
+      <button class="calc-btn">9</button>
+      <button class="calc-btn op">×</button>
+      <button class="calc-btn">4</button>
+      <button class="calc-btn">5</button>
+      <button class="calc-btn">6</button>
+      <button class="calc-btn op">-</button>
+      <button class="calc-btn">1</button>
+      <button class="calc-btn">2</button>
+      <button class="calc-btn">3</button>
+      <button class="calc-btn op">+</button>
+      <button class="calc-btn" style="grid-column:span 2;border-radius:35px;justify-content:flex-start;padding-left:28px;">0</button>
+      <button class="calc-btn">.</button>
+      <button class="calc-btn op">=</button>
+    </div>`;
+}
+
+let igLiked = false;
+let storyTimer = null;
+
+function getIgView() {
+  return `
+    <div class="ap-head" style="border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span class="back" onclick="closeApp()">‹</span>
+        <span style="font-weight:700;font-size:20px;font-family:sans-serif;">Instagram</span>
+      </div>
+      <div style="font-size:20px;display:flex;gap:15px;"><span>❤️</span><span>💬</span></div>
+    </div>
+    <div class="scroll">
+      <!-- Stories Bar -->
+      <div style="display:flex;gap:14px;padding:12px 14px;border-bottom:1px solid #f0f0f0;overflow-x:auto;">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;" onclick="openIgStory()">
+          <div style="width:62px;height:62px;border-radius:50%;padding:2px;background:linear-gradient(45deg,#feda75,#fa7e1e,#d62976,#962fbf);">
+            <div style="width:100%;height:100%;border-radius:50%;border:2px solid #fff;overflow:hidden;">
+              <img src="https://i.pinimg.com/736x/d0/b6/0c/d0b60c9c7bd7b4f0445f7944ed61909b.jpg" style="width:100%;height:100%;object-fit:cover;">
+            </div>
+          </div>
+          <span style="font-size:12px;color:#333;">baby</span>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+          <div style="width:62px;height:62px;border-radius:50%;padding:2px;background:#ddd;">
+            <div style="width:100%;height:100%;border-radius:50%;border:2px solid #fff;overflow:hidden;">
+              <img src="https://i.pinimg.com/1200x/45/c3/7e/45c37e86542793f115b3b90b1f458730.jpg" style="width:100%;height:100%;object-fit:cover;">
+            </div>
+          </div>
+          <span style="font-size:12px;color:#333;">MOM</span>
+        </div>
+      </div>
+
+      <!-- Feed Post -->
+      <div style="padding:12px 16px;display:flex;align-items:center;gap:10px;">
+        <div style="width:36px;height:36px;border-radius:50%;overflow:hidden;">
+          <img src="https://i.pinimg.com/736x/d0/b6/0c/d0b60c9c7bd7b4f0445f7944ed61909b.jpg" style="width:100%;height:100%;object-fit:cover;">
+        </div>
+        <span style="font-weight:600;font-size:15px;">baby</span>
+      </div>
+      <div style="width:100%;aspect-ratio:1;background:url('https://i.pinimg.com/1200x/99/5a/e5/995ae5d2a61ce94fdd56fe74f196f06e.jpg') center/cover;"></div>
+      <div style="padding:12px 16px;">
+        <div style="display:flex;gap:14px;font-size:22px;margin-bottom:8px;">
+          <span id="igHeart" onclick="toggleIgLike()" style="cursor:pointer;">${igLiked ? '❤️' : '🤍'}</span>
+          <span>💬</span>
+          <span>✈️</span>
+        </div>
+        <div style="font-weight:600;font-size:14px;margin-bottom:4px;" id="igLikeCount">ถูกใจ ${igLiked ? '1,241' : '1,240'} คน</div>
+        <div style="font-size:14px;"><span style="font-weight:600;">baby</span> วันนี้ท้องฟ้าสวยจัง ☁️✨</div>
+        <div style="font-size:12px;color:#8e8e93;margin-top:6px;">2 ชั่วโมงที่แล้ว</div>
+      </div>
+    </div>`;
+}
+
+function toggleIgLike() {
+  igLiked = !igLiked;
+  const heart = document.getElementById('igHeart');
+  const count = document.getElementById('igLikeCount');
+  if (heart) heart.textContent = igLiked ? '❤️' : '🤍';
+  if (count) count.textContent = `ถูกใจ ${igLiked ? '1,241' : '1,240'} คน`;
+}
+
+function openIgStory() {
+  const viewer = document.getElementById('igStoryViewer');
+  const fill = document.getElementById('storyFill');
+  viewer.classList.add('open');
+  fill.style.width = '0%';
+  setTimeout(() => { fill.style.transition = 'width 5s linear'; fill.style.width = '100%'; }, 50);
+  
+  clearTimeout(storyTimer);
+  storyTimer = setTimeout(() => { closeIgStory(); }, 5050);
+}
+
+function closeIgStory() {
+  clearTimeout(storyTimer);
+  const viewer = document.getElementById('igStoryViewer');
+  const fill = document.getElementById('storyFill');
+  viewer.classList.remove('open');
+  fill.style.transition = 'none';
+  fill.style.width = '0%';
+}
+
+function getSafariView() {
+  return `
+    <div style="display:flex;flex-direction:column;height:100%;background:#f9f9f9;">
+      <div style="padding:10px 14px;background:#fff;border-bottom:1px solid #e5e5e5;display:flex;align-items:center;gap:10px;">
+        <span class="back" onclick="closeApp()" style="color:#007aff;font-size:26px;cursor:pointer">‹</span>
+        <div style="flex:1;background:#e3e3e4;border-radius:10px;padding:6px 12px;font-size:14px;color:#333;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+          🔒 google.com
+        </div>
+        <span style="color:#007aff;font-size:20px;">↻</span>
+      </div>
+      <div class="scroll" style="padding:40px 20px;text-align:center;">
+        <div style="font-size:42px;margin-bottom:10px;">🔍</div>
+        <h2 style="font-size:22px;font-weight:600;margin-bottom:12px;">Google</h2>
+        <div style="background:#fff;border:1px solid #ddd;border-radius:24px;padding:10px 16px;font-size:15px;color:#999;box-shadow:0 2px 5px rgba(0,0,0,0.05);text-align:left;">
+          ค้นหาหรือพิมพ์ที่อยู่เว็บ...
+        </div>
+      </div>
+    </div>`;
+}
+
+/* ========== LINE ========== */
+const lineChats = {
+  friend1: {
+    name: 'baby',
+    icon: '<img src="https://i.pinimg.com/736x/d0/b6/0c/d0b60c9c7bd7b4f0445f7944ed61909b.jpg" style="width:100%;height:100%;object-fit:cover;display:block;">',
+    color: '#a8e6cf',
+    unread: 0,
+    autoReplies: [
+      {
+        keywords: ['หิว'],
+        answers: ['หนูอยากกินอะไรคะ', 'พี่ซื้อไอติมมาให้แล้วค่ะ']
+      },
+      {
+        keywords: ['คิดถึง'],
+        answers: ['คิดถึงเหมือนกันค่ะ', 'อยากเจอพี่ไหมคะ', 'คิดถึงขนาดไหนคะ']
+      },
+      {
+        keywords: ['รักพี่','รักนะคะ'],
+        answers: ['รักเหมือนกันค่ะ','พี่ต้ารักน้องเพลงมากกว่าอีก','อ้อนเหรอคะ']
+      },
+      {
+        keywords: ['อยากเจอ'],
+        answers: [
+          ['พี่กำลังจะไปหาค่ะ', 'เอาขนมด้วยเนอะ']
+        ]
+      }
+    ],
+    defaultAnswers: [
+      'ไหนว่าไปนอนไงคะ',
+      'จะจับหอมให้ช้ำเลย',
+      'สงสัยจะคิดถึงพี่จริง ๆ สินะ'
+    ],
+    messages: [
+      { dateDivider: true, text: '19 ตุลาคม 2569' },
+      { me: false, text: 'พรุ่งนี้ไปหาหมอใช่ไหมคะ', time: '22:49', isRead: true },
+      { me: true,  text: 'อื้อ ใช่ค่ะ', time: '22:49', isRead: true  },
+      { me: false, text: 'ให้พี่ไปด้วยไหมคะ', time: '22:49', isRead: true  },
+      { me: true,  text: 'ม่าย แบบนั้นพี่ต้าก็ต้องลาหยุดสิคะ', time: '22:50', isRead: true  },
+      { me: true,  text: 'หนูไปคนเดียวได้สบายมากค่ะ', time: '22:50', isRead: true  },
+      { me: true,  text: 'แถมคุณพ่อก็จะไปด้วยนะ', time: '22:50', isRead: true  },
+      { me: false, text: 'คุณพ่อก็ไปด้วยเหรอคะ', time: '22:50', isRead: true  },
+      { me: false, text: 'แบบนั้นพี่ก็สบายใจแล้วค่ะ', time: '22:51' , isRead: true },
+      { me: true,  text: 'แบล่ กลัวพ่อหนูล่ะสิ', time: '22:51' , isRead: true },
+      { me: false, text: 'พี่ไม่ได้กลัวนะคะ', time: '22:51' , isRead: true },
+      { me: false, text: 'ไปนอนเลยตัวดื้อ', time: '22:51' , isRead: true },
+      { me: true,  text: 'ไปก็ด้ายยยยยยยย', time: '22:52' , isRead: true },
+      { me: true,  text: 'ฝันดีนะคะ', time: '22:52' , isRead: true },
+      { me: false, text: 'ฝันดีค่ะ', time: '22:52' , isRead: true }
+    ]
+  },
+  mom: {
+    name: 'MOM',
+    icon: '<img src="https://i.pinimg.com/1200x/45/c3/7e/45c37e86542793f115b3b90b1f458730.jpg" style="width:100%;height:100%;object-fit:cover;display:block;">',
+    color: '#ffaaa5',
+    unread: 1,
+    messages: [
+      { me: false, text: 'ลูกกินข้าวหรือยัง', time: '12:30' },
+      { me: true,  text: 'กินแล้วค่ะ', time: '12:35' },
+      { me: true,  text: 'คิดถึงคุณแม่จังเลย', time: '12:35' },
+      { me: false, text: 'เดี๋ยวเถอะ ไปเรียนได้แค่ครึ่งวันบ่นถึงแม่ซะแล้ว', time: '12:35' }
+    ]
+  }
+};
+
+function getLineList() {
+  return `
+    <div class="line-head">
+      <span class="back" onclick="closeApp()" style="color:#06C755;font-size:26px;cursor:pointer">‹</span>
+      <h1>LINE</h1>
+      <span style="font-size:22px">✏️</span>
+    </div>
+    <div class="line-tabs">
+      <div class="on">แชท</div>
+      <div>เพื่อน</div>
+      <div>วันนี้</div>
+    </div>
+    <div class="scroll">
+      ${Object.keys(lineChats).map(id => {
+        const c = lineChats[id];
+        const lastMsg = c.messages[c.messages.length - 1];
+        return `
+          <div class="lrow" onclick="openLineChat('${id}')">
+            <div class="lav" style="background:${c.color}">${c.icon}</div>
+            <div class="lmid"><div class="ln">${c.name}</div><div class="lp">${lastMsg ? (lastMsg.dateDivider ? lastMsg.text : lastMsg.text) : ''}</div></div>
+            <div class="lr"><span>${lastMsg && !lastMsg.dateDivider ? lastMsg.time : ''}</span>${c.unread > 0 ? `<span class="lbadge">${c.unread}</span>` : ''}</div>
+          </div>`;
+      }).join('')}
+    </div>`;
+}
+
+function openLineChat(id) {
+  const c = lineChats[id];
+  if (!c) return;
+  c.unread = 0;
+
+  // 🎬 เมื่อผู้ใช้กดเข้ามาในแชท baby จริงๆ ให้เริ่มรันสคริปต์โต้ตอบ
+  if (id === 'friend1' && notificationTriggered && !storyTriggered) {
+    storyTriggered = true;
+    setTimeout(() => {
+      runStoryScript(0);
+    }, 1500);
+  }
+
+  const app = document.getElementById('app');
+  app.innerHTML = `
+    <div class="lroom">
+      <div class="lroom-head">
+        <span class="back" onclick="openApp('line')">‹</span>
+        <div class="name">${c.name}</div>
+        <span>🔍</span>
+      </div>
+      <div class="lchat" id="lchatScroll">
+        ${c.messages.map(m => {
+          if (m.dateDivider) {
+            return `<div class="ldate">${m.text}</div>`;
+          }
+          return `
+            <div class="lmsg ${m.me ? 'me' : ''}">
+              ${!m.me ? `<div class="av" style="background:${c.color}">${c.icon}</div>` : ''}
+              <div class="lbubble">${m.text}</div>
+              <div class="${m.me ? 'lmeta' : ''}">
+                ${m.me && m.isRead ? `<span class="lread">อ่านแล้ว</span>` : ''}
+                <div class="ltime">${m.time}</div>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+      <div class="lin">
+        <input type="text" id="linput" placeholder="พิมพ์ข้อความ..." onkeypress="if(event.key==='Enter')sendLineMsg('${id}')">
+        <button onclick="sendLineMsg('${id}')">➔</button>
+      </div>
+    </div>`;
+  const chatScroll = document.getElementById('lchatScroll');
+  if (chatScroll) chatScroll.scrollTop = chatScroll.scrollHeight;
+}
+
+function sendLineMsg(id) {
+  const inp = document.getElementById('linput');
+  if (!inp || !inp.value.trim()) return;
+
+  const userText = inp.value.trim();
+  const now = new Date();
+  const time = `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+  const chat = lineChats[id];
+  chat.messages.push({ me: true, text: userText, time: time, isRead: false });
+  openLineChat(id);
+
+  let chosenSet = null;
+
+  if (chat.autoReplies) {
+    const matchedGroup = chat.autoReplies.find(group =>
+      group.keywords.some(kw => userText.includes(kw))
+    );
+
+    if (matchedGroup && matchedGroup.answers.length > 0) {
+      let pool = matchedGroup.answers;
+      if (pool.length > 1 && matchedGroup.lastAnswer !== undefined) {
+        pool = pool.filter(ans => JSON.stringify(ans) !== JSON.stringify(matchedGroup.lastAnswer));
+      }
+      const randomIndex = Math.floor(Math.random() * pool.length);
+      chosenSet = pool[randomIndex];
+      matchedGroup.lastAnswer = chosenSet;
+    } else if (chat.defaultAnswers && chat.defaultAnswers.length > 0) {
+      let pool = chat.defaultAnswers;
+      if (pool.length > 1 && chat.lastDefault !== undefined) {
+        pool = pool.filter(ans => JSON.stringify(ans) !== JSON.stringify(chat.lastDefault));
+      }
+      const randomIndex = Math.floor(Math.random() * pool.length);
+      chosenSet = pool[randomIndex];
+      chat.lastDefault = chosenSet;
+    }
+  }
+
+  const targetIndex = chat.messages.length - 1;
+  setTimeout(() => {
+    if (chat.messages[targetIndex]) {
+      chat.messages[targetIndex].isRead = true;
+      const currentScroll = document.getElementById('lchatScroll');
+      if (currentScroll) openLineChat(id);
+    }
+  }, 1000);
+
+  if (chosenSet) {
+    const replyArray = Array.isArray(chosenSet) ? chosenSet : [chosenSet];
+
+    replyArray.forEach((msgText, index) => {
+      const replyDelay = 2000 + (index * 900); 
+
+      setTimeout(() => {
+        const replyTime = `${new Date().getHours()}:${String(new Date().getMinutes()).padStart(2, '0')}`;
+        chat.messages.push({ me: false, text: msgText, time: replyTime });
+
+        const currentScroll = document.getElementById('lchatScroll');
+        if (currentScroll) openLineChat(id);
+      }, replyDelay);
+    });
+  }
+}
+</script>
+</body>
+</html>
